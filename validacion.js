@@ -83,3 +83,35 @@ function mostrarExito(mensaje) {
   agregarSection.insertBefore(exitoDiv, agregarSection.firstChild);
   setTimeout(() => exitoDiv.remove(), 5000);
 }
+
+
+// Funciones para manejar el estado de carga
+function mostrarCarga() {
+  const loadingDiv = document.createElement('div');
+  loadingDiv.className = 'loading';
+  loadingDiv.innerHTML = '<div class="spinner"></div>';
+  document.body.appendChild(loadingDiv);
+}
+
+function ocultarCarga() {
+  const loadingDiv = document.querySelector('.loading');
+  if (loadingDiv) loadingDiv.remove();
+}
+
+// Modifica las funciones asíncronas para usar el loader
+async function mostrarPersonajes() {
+  mostrarCarga();
+  try {
+    const { data: personajes, error } = await supabase.from('personajes').select('*');
+    if (error) throw error;
+    
+    const contenedor = document.getElementById('listaPersonajes');
+    contenedor.innerHTML = '';
+    // ... resto del código ...
+  } catch (error) {
+    console.error('Error al obtener los personajes:', error);
+    mostrarError("Error al cargar los personajes");
+  } finally {
+    ocultarCarga();
+  }
+}
