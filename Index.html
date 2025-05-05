@@ -239,8 +239,99 @@
             <img src="${p.imagen_url}" alt="Imagen de ${p.nombre}" style="max-width: 100px;">
             <label for="edit-faccion-${p.id}">Facción:</label>
             <select id="edit-faccion-${p.id}">
-              <option value="Fujimafia">Fujimafia</option>
-              <option value="Ruinas de los Caballeros">Ruinas de los Caballeros</option>
-             
-::contentReference[oaicite:0]{index=0}
- 
+              <option value="Fujimafia" ${p.faccion === 'Fujimafia' ? 'selected' : ''}>Fujimafia</option>
+              <option value="Ruinas de los Caballeros" ${p.faccion === 'Ruinas de los Caballeros' ? 'selected' : ''}>Ruinas de los Caballeros</option>
+              <option value="Dominios de Saurus" ${p.faccion === 'Dominios de Saurus' ? 'selected' : ''}>Dominios de Saurus</option>
+              <option value="Segunda República Lagartos" ${p.faccion === 'Segunda República Lagartos' ? 'selected' : ''}>Segunda República Lagartos</option>
+              <option value="Isla [REDACTED]" ${p.faccion === 'Isla [REDACTED]' ? 'selected' : ''}>Isla [REDACTED]</option>
+              <option value="Tribus Tribales" ${p.faccion === 'Tribus Tribales' ? 'selected' : ''}>Tribus Tribales</option>
+              <option value="TorreDe" ${p.faccion === 'TorreDe' ? 'selected' : ''}>TorreDe</option>
+              <option value="Isla Tuki" ${p.faccion === 'Isla Tuki' ? 'selected' : ''}>Isla Tuki</option>
+              <option value="Federación de Dureza" ${p.faccion === 'Federación de Dureza' ? 'selected' : ''}>Federación de Dureza</option>
+            </select>
+            
+            <label for="edit-rol-${p.id}">Rol:</label>
+            <select id="edit-rol-${p.id}">
+              <option value="Héroe" ${p.rol === 'Héroe' ? 'selected' : ''}>Héroe</option>
+              <option value="Villano" ${p.rol === 'Villano' ? 'selected' : ''}>Villano</option>
+              <option value="Ente del Caos" ${p.rol === 'Ente del Caos' ? 'selected' : ''}>Ente del Caos</option>
+              <option value="Neutral" ${p.rol === 'Neutral' ? 'selected' : ''}>Neutral</option>
+            </select>
+            
+            <input type="file" id="edit-imagen-${p.id}" accept="image/*">
+            
+            <div class="crud-buttons">
+              <button onclick="guardarCambios(${p.id})">Guardar Cambios</button>
+              <button onclick="eliminarPersonaje(${p.id})">Eliminar</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    async function guardarCambios(id) {
+      const nombre = document.getElementById(`edit-nombre-${id}`).value;
+      const descripcion = document.getElementById(`edit-desc-${id}`).value;
+      const faccion = document.getElementById(`edit-faccion-${id}`).value;
+      const rol = document.getElementById(`edit-rol-${id}`).value;
+      const imagenInput = document.getElementById(`edit-imagen-${id}`);
+      
+      // Verificar si se seleccionó una nueva imagen
+      let imagen_url = '';
+      if (imagenInput.files.length) {
+        const imagenFile = imagenInput.files[0];
+        const fileExt = imagenFile.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = fileName;
+
+        const { error: uploadError } = await supabase.storage
+          .from('personajes')
+          .upload(filePath, imagenFile);
+
+        if (uploadError) {
+          console.error('Error al subir la imagen:', uploadError);
+          alert("Error al subir la imagen.");
+          return;
+        }
+
+        // Obtener la URL pública de la nueva imagen
+        const { data: publicUrlData } = supabase.storage
+          .from('personajes')
+          .getPublicUrl(filePath);
+          
+        imagen_url = publicUrlData.publicUrl;
+      }
+
+      const { error: updateError } = await supabase
+        .from('personajes')
+        .update({ nombre, descripcion, faccion, rol, imagen_url })
+        .eq('id', id);
+
+      if (updateError) {
+        console.error('Error al actualizar el personaje:', updateError);
+        alert("Error al guardar los cambios.");
+        return;
+      }
+
+      alert("Cambios guardados exitosamente.");
+      mostrarCRUD();
+    }
+
+    async function eliminarPersonaje(id) {
+      const { error } = await supabase
+        .from('personajes')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error al eliminar el personaje:', error);
+        alert("Error al eliminar el personaje.");
+        return;
+      }
+
+      alert("Personaje eliminado exitosamente.");
+      mostrarCRUD();
+    }
+  </script>
+</body>
+</html>
