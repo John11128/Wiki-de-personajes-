@@ -131,6 +131,20 @@ function manejarError(error) {
   mostrarError(mensajeError);
 }
 
+// Ejemplo de la función mostrarSeccion
+function mostrarSeccion(seccion) {
+  // Ocultar todas las secciones
+  const secciones = document.querySelectorAll('.seccion');
+  secciones.forEach(seccion => seccion.style.display = 'none');
+
+  // Mostrar la sección que fue pasada como parámetro
+  const seccionMostrar = document.getElementById(seccion);
+  if (seccionMostrar) {
+    seccionMostrar.style.display = 'block';
+  }
+}
+
+
 // Función para validar URLs de imagen
 function validarURL(url) {
   try {
