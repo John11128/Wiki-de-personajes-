@@ -1,1 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Wiki de Personajes</title>
+  <style>
+    body { font-family: Arial; background: #f4f4f4; margin: 0; padding: 0; }
+    header, nav, main { padding: 1em; }
+    nav button { margin: 0 0.5em 1em 0; }
+    section { display: none; }
+    .visible { display: block; }
+    .card { background: white; padding: 1em; margin: 1em 0; border-radius: 8px; box-shadow: 0 2px 4px #ccc; }
+    select, input, textarea { display: block; margin: 0.5em 0; padding: 0.5em; width: 100%; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Wiki de Personajes</h1>
+  </header>
 
+  <nav>
+    <button onclick="mostrarVista('ver')">Ver Personajes</button>
+    <button onclick="mostrarVista('agregar')">Agregar</button>
+    <button onclick="mostrarVista('crud')">Editar / Borrar</button>
+  </nav>
+
+  <main>
+    <!-- Vista: Ver personajes -->
+    <section id="vista-ver" class="visible">
+      <div id="lista-personajes"></div>
+    </section>
+
+    <!-- Vista: Agregar personajes -->
+    <section id="vista-agregar">
+      <h2>Agregar personaje</h2>
+      <form onsubmit="agregarPersonaje(); return false;">
+        <input type="text" id="nombre" placeholder="Nombre" required>
+        <textarea id="descripcion" placeholder="Descripción" required></textarea>
+        <label for="faccion">Facción / Lugar:</label>
+        <select id="faccion" required>
+          <option value="">Selecciona una</option>
+          <option>Fujimafia</option>
+          <option>Ruinas de los caballeros</option>
+          <option>Dominios de Saurus</option>
+          <option>Segunda república lagartos</option>
+          <option>Isla [REDACTED]</option>
+          <option>Tribus tribales</option>
+          <option>TorreDe</option>
+          <option>Isla Tuki</option>
+          <option>Federación de dureza</option>
+        </select>
+        <button type="submit">Guardar</button>
+      </form>
+    </section>
+
+    <!-- Vista: CRUD -->
+    <section id="vista-crud">
+      <h2>Editar o Borrar Personajes</h2>
+      <div id="crud-personajes"></div>
+    </section>
+  </main>
+
+  <script>
+    const vistas = {
+      ver: document.getElementById('vista-ver'),
+      agregar: document.getElementById('vista-agregar'),
+      crud: document.getElementById('vista-crud')
+    };
+
+    function mostrarVista(nombre) {
+      for (const v in vistas) {
+        vistas[v].classList.remove('visible');
+      }
+      vistas[nombre].classList.add('visible');
+      if (nombre === 'ver') mostrarPersonajes();
+      if (nombre === 'crud') mostrarCRUD();
+    }
+
+    function obtenerPersonajes() {
+      return JSON.parse(localStorage.getItem('personajes') || '[]');
+    }
+
+    function guardarPersonajes(lista) {
+      localStorage.setItem('personajes', JSON.stringify(lista));
+    }
+
+    function agregarPersonaje() {
+      const nombre = document.getElementById('nombre').value;
+      const descripcion = document.getElementById('descripcion').value;
+      const faccion = document.getElementById('faccion').value;
+      const personajes = obtenerPersonajes();
+      personajes.push({ nombre, descripcion, faccion });
+      guardarPersonajes(personajes);
+      document.querySelector('form').reset();
+      alert('Personaje agregado.');
+      mostrarVista('ver');
+    }
+
+    function mostrarPersonajes() {
+      const contenedor = document.getElementById('lista-personajes');
+      const personajes = obtenerPersonajes();
+      contenedor.innerHTML = personajes.map(p => `
+        <div class="card">
+          <h3>${p.nombre}</h3>
+          <p>${p.descripcion}</p>
+          <small><b>Facción:</b> ${p.faccion}</small>
+        </div>
+      `).join('');
+    }
+
+    function mostrarCRUD() {
+      const contenedor = document.getElementById('crud-personajes');
+      const personajes = obtenerPersonajes();
+      contenedor.innerHTML = personajes.map((p, i) => `
+        <div class="card">
+          <input value="${p.nombre}" onchange="editarCampo(${i}, 'nombre', this.value)">
+          <textarea onchange="editarCampo(${i}, 'descripcion', this.value)">${p.descripcion}</textarea>
+          <select onchange="editarCampo(${i}, 'faccion', this.value)">
+            <option ${p.faccion === 'Fujimafia' ? 'selected' : ''}>Fujimafia</option>
+            <option ${p.faccion === 'Ruinas de los caballeros' ? 'selected' : ''}>Ruinas de los caballeros</option>
+            <option ${p.faccion === 'Dominios de Saurus' ? 'selected' : ''}>Dominios de Saurus</option>
+            <option ${p.faccion === 'Segunda república lagartos' ? 'selected' : ''}>Segunda república lagartos</option>
+            <option ${p.faccion === 'Isla [REDACTED]' ? 'selected' : ''}>Isla [REDACTED]</option>
+            <option ${p.faccion === 'Tribus tribales' ? 'selected' : ''}>Tribus tribales</option>
+            <option ${p.faccion === 'TorreDe' ? 'selected' : ''}>TorreDe</option>
+            <option ${p.faccion === 'Isla Tuki' ? 'selected' : ''}>Isla Tuki</option>
+            <option ${p.faccion === 'Federación de dureza' ? 'selected' : ''}>Federación de dureza</option>
+          </select>
+          <button onclick="borrarPersonaje(${i})">Borrar</button>
+        </div>
+      `).join('');
+    }
+
+    function editarCampo(i, campo, valor) {
+      const personajes = obtenerPersonajes();
+      personajes[i][campo] = valor;
+      guardarPersonajes(personajes);
+    }
+
+    function borrarPersonaje(i) {
+      const personajes = obtenerPersonajes();
+      personajes.splice(i, 1);
+      guardarPersonajes(personajes);
+      mostrarCRUD();
+    }
+
+    mostrarPersonajes(); // Mostrar al cargar
+  </script>
+</body>
+</html>
