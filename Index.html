@@ -1,16 +1,75 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Wiki de Personajes</title>
   <style>
-    body { font-family: Arial; background: #f4f4f4; margin: 0; padding: 0; }
-    header, nav, main { padding: 1em; }
-    nav button { margin: 0 0.5em 1em 0; }
-    section { display: none; }
-    .visible { display: block; }
-    .card { background: white; padding: 1em; margin: 1em 0; border-radius: 8px; box-shadow: 0 2px 4px #ccc; }
-    select, input, textarea { display: block; margin: 0.5em 0; padding: 0.5em; width: 100%; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #222;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    nav {
+      background-color: #333;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      padding: 0.5rem;
+    }
+
+    nav button {
+      background-color: #555;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+
+    section {
+      display: none;
+      padding: 1rem;
+    }
+
+    section.active {
+      display: block;
+    }
+
+    .personaje {
+      background: white;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .personaje img {
+      max-width: 200px;
+      height: auto;
+      display: block;
+      margin-bottom: 0.5rem;
+      border-radius: 6px;
+    }
+
+    input, select, textarea {
+      display: block;
+      width: 100%;
+      margin: 0.5rem 0 1rem 0;
+      padding: 0.5rem;
+    }
+
+    .crud-buttons button {
+      margin-right: 0.5rem;
+    }
   </style>
 </head>
 <body>
@@ -20,131 +79,155 @@
 
   <nav>
     <button onclick="mostrarVista('ver')">Ver Personajes</button>
-    <button onclick="mostrarVista('agregar')">Agregar</button>
-    <button onclick="mostrarVista('crud')">Editar / Borrar</button>
+    <button onclick="mostrarVista('agregar')">Agregar Personaje</button>
+    <button onclick="mostrarVista('editar')">Editar/Borrar</button>
   </nav>
 
-  <main>
-    <!-- Vista: Ver personajes -->
-    <section id="vista-ver" class="visible">
-      <div id="lista-personajes"></div>
-    </section>
+  <section id="ver" class="active">
+    <h2>Personajes</h2>
+    <div id="listaPersonajes"></div>
+  </section>
 
-    <!-- Vista: Agregar personajes -->
-    <section id="vista-agregar">
-      <h2>Agregar personaje</h2>
-      <form onsubmit="agregarPersonaje(); return false;">
-        <input type="text" id="nombre" placeholder="Nombre" required>
-        <textarea id="descripcion" placeholder="Descripción" required></textarea>
-        <label for="faccion">Facción / Lugar:</label>
-        <select id="faccion" required>
-          <option value="">Selecciona una</option>
-          <option>Fujimafia</option>
-          <option>Ruinas de los caballeros</option>
-          <option>Dominios de Saurus</option>
-          <option>Segunda república lagartos</option>
-          <option>Isla [REDACTED]</option>
-          <option>Tribus tribales</option>
-          <option>TorreDe</option>
-          <option>Isla Tuki</option>
-          <option>Federación de dureza</option>
-        </select>
-        <button type="submit">Guardar</button>
-      </form>
-    </section>
+  <section id="agregar">
+    <h2>Agregar nuevo personaje</h2>
+    <input type="text" id="nombre" placeholder="Nombre" />
+    <textarea id="descripcion" placeholder="Descripción"></textarea>
+    <input type="url" id="imagen" placeholder="URL de la imagen" />
 
-    <!-- Vista: CRUD -->
-    <section id="vista-crud">
-      <h2>Editar o Borrar Personajes</h2>
-      <div id="crud-personajes"></div>
-    </section>
-  </main>
+    <label for="faccion">Facción:</label>
+    <select id="faccion">
+      <option value="Fujimafia">Fujimafia</option>
+      <option value="Ruinas de los Caballeros">Ruinas de los Caballeros</option>
+      <option value="Dominios de Saurus">Dominios de Saurus</option>
+      <option value="Segunda República Lagartos">Segunda República Lagartos</option>
+      <option value="Isla [REDACTED]">Isla [REDACTED]</option>
+      <option value="Tribus Tribales">Tribus Tribales</option>
+      <option value="TorreDe">TorreDe</option>
+      <option value="Isla Tuki">Isla Tuki</option>
+      <option value="Federación de Dureza">Federación de Dureza</option>
+    </select>
+
+    <label for="rol">Rol:</label>
+    <select id="rol">
+      <option value="Héroe">Héroe</option>
+      <option value="Villano">Villano</option>
+      <option value="Ente del Caos">Ente del Caos</option>
+      <option value="Neutral">Neutral</option>
+    </select>
+
+    <button onclick="agregarPersonaje()">Guardar</button>
+  </section>
+
+  <section id="editar">
+    <h2>Editar/Borrar personajes</h2>
+    <div id="listaCRUD"></div>
+  </section>
 
   <script>
-    const vistas = {
-      ver: document.getElementById('vista-ver'),
-      agregar: document.getElementById('vista-agregar'),
-      crud: document.getElementById('vista-crud')
-    };
+    let personajes = JSON.parse(localStorage.getItem('personajes')) || [];
 
-    function mostrarVista(nombre) {
-      for (const v in vistas) {
-        vistas[v].classList.remove('visible');
-      }
-      vistas[nombre].classList.add('visible');
-      if (nombre === 'ver') mostrarPersonajes();
-      if (nombre === 'crud') mostrarCRUD();
+    function guardarLocal() {
+      localStorage.setItem('personajes', JSON.stringify(personajes));
     }
 
-    function obtenerPersonajes() {
-      return JSON.parse(localStorage.getItem('personajes') || '[]');
-    }
-
-    function guardarPersonajes(lista) {
-      localStorage.setItem('personajes', JSON.stringify(lista));
+    function mostrarVista(id) {
+      document.querySelectorAll("section").forEach(seccion => {
+        seccion.classList.remove("active");
+      });
+      document.getElementById(id).classList.add("active");
+      if (id === 'ver') mostrarPersonajes();
+      if (id === 'editar') mostrarCRUD();
     }
 
     function agregarPersonaje() {
       const nombre = document.getElementById('nombre').value;
       const descripcion = document.getElementById('descripcion').value;
+      const imagen = document.getElementById('imagen').value;
       const faccion = document.getElementById('faccion').value;
-      const personajes = obtenerPersonajes();
-      personajes.push({ nombre, descripcion, faccion });
-      guardarPersonajes(personajes);
-      document.querySelector('form').reset();
-      alert('Personaje agregado.');
-      mostrarVista('ver');
+      const rol = document.getElementById('rol').value;
+
+      if (nombre && descripcion) {
+        personajes.push({ nombre, descripcion, imagen, faccion, rol });
+        guardarLocal();
+        document.getElementById('nombre').value = '';
+        document.getElementById('descripcion').value = '';
+        document.getElementById('imagen').value = '';
+        alert("Personaje guardado.");
+      }
     }
 
     function mostrarPersonajes() {
-      const contenedor = document.getElementById('lista-personajes');
-      const personajes = obtenerPersonajes();
-      contenedor.innerHTML = personajes.map(p => `
-        <div class="card">
-          <h3>${p.nombre}</h3>
-          <p>${p.descripcion}</p>
-          <small><b>Facción:</b> ${p.faccion}</small>
-        </div>
-      `).join('');
+      const contenedor = document.getElementById('listaPersonajes');
+      contenedor.innerHTML = '';
+      personajes.forEach(p => {
+        contenedor.innerHTML += `
+          <div class="personaje">
+            ${p.imagen ? `<img src="${p.imagen}" alt="Imagen de ${p.nombre}">` : ''}
+            <h3>${p.nombre}</h3>
+            <p>${p.descripcion}</p>
+            <p><strong>Facción:</strong> ${p.faccion}</p>
+            <p><strong>Rol:</strong> ${p.rol}</p>
+          </div>
+        `;
+      });
     }
 
     function mostrarCRUD() {
-      const contenedor = document.getElementById('crud-personajes');
-      const personajes = obtenerPersonajes();
-      contenedor.innerHTML = personajes.map((p, i) => `
-        <div class="card">
-          <input value="${p.nombre}" onchange="editarCampo(${i}, 'nombre', this.value)">
-          <textarea onchange="editarCampo(${i}, 'descripcion', this.value)">${p.descripcion}</textarea>
-          <select onchange="editarCampo(${i}, 'faccion', this.value)">
-            <option ${p.faccion === 'Fujimafia' ? 'selected' : ''}>Fujimafia</option>
-            <option ${p.faccion === 'Ruinas de los caballeros' ? 'selected' : ''}>Ruinas de los caballeros</option>
-            <option ${p.faccion === 'Dominios de Saurus' ? 'selected' : ''}>Dominios de Saurus</option>
-            <option ${p.faccion === 'Segunda república lagartos' ? 'selected' : ''}>Segunda república lagartos</option>
-            <option ${p.faccion === 'Isla [REDACTED]' ? 'selected' : ''}>Isla [REDACTED]</option>
-            <option ${p.faccion === 'Tribus tribales' ? 'selected' : ''}>Tribus tribales</option>
-            <option ${p.faccion === 'TorreDe' ? 'selected' : ''}>TorreDe</option>
-            <option ${p.faccion === 'Isla Tuki' ? 'selected' : ''}>Isla Tuki</option>
-            <option ${p.faccion === 'Federación de dureza' ? 'selected' : ''}>Federación de dureza</option>
-          </select>
-          <button onclick="borrarPersonaje(${i})">Borrar</button>
-        </div>
-      `).join('');
+      const contenedor = document.getElementById('listaCRUD');
+      contenedor.innerHTML = '';
+      personajes.forEach((p, i) => {
+        contenedor.innerHTML += `
+          <div class="personaje">
+            <input type="text" value="${p.nombre}" id="edit-nombre-${i}">
+            <textarea id="edit-desc-${i}">${p.descripcion}</textarea>
+            <input type="url" value="${p.imagen}" id="edit-imagen-${i}">
+            <select id="edit-faccion-${i}">
+              <option value="Fujimafia">Fujimafia</option>
+              <option value="Ruinas de los Caballeros">Ruinas de los Caballeros</option>
+              <option value="Dominios de Saurus">Dominios de Saurus</option>
+              <option value="Segunda República Lagartos">Segunda República Lagartos</option>
+              <option value="Isla [REDACTED]">Isla [REDACTED]</option>
+              <option value="Tribus Tribales">Tribus Tribales</option>
+              <option value="TorreDe">TorreDe</option>
+              <option value="Isla Tuki">Isla Tuki</option>
+              <option value="Federación de Dureza">Federación de Dureza</option>
+            </select>
+            <select id="edit-rol-${i}">
+              <option value="Héroe">Héroe</option>
+              <option value="Villano">Villano</option>
+              <option value="Ente del Caos">Ente del Caos</option>
+              <option value="Neutral">Neutral</option>
+            </select>
+            <div class="crud-buttons">
+              <button onclick="actualizar(${i})">Actualizar</button>
+              <button onclick="eliminar(${i})">Eliminar</button>
+            </div>
+          </div>
+        `;
+        document.getElementById(`edit-faccion-${i}`).value = p.faccion;
+        document.getElementById(`edit-rol-${i}`).value = p.rol;
+      });
     }
 
-    function editarCampo(i, campo, valor) {
-      const personajes = obtenerPersonajes();
-      personajes[i][campo] = valor;
-      guardarPersonajes(personajes);
-    }
-
-    function borrarPersonaje(i) {
-      const personajes = obtenerPersonajes();
-      personajes.splice(i, 1);
-      guardarPersonajes(personajes);
+    function actualizar(i) {
+      personajes[i].nombre = document.getElementById(`edit-nombre-${i}`).value;
+      personajes[i].descripcion = document.getElementById(`edit-desc-${i}`).value;
+      personajes[i].imagen = document.getElementById(`edit-imagen-${i}`).value;
+      personajes[i].faccion = document.getElementById(`edit-faccion-${i}`).value;
+      personajes[i].rol = document.getElementById(`edit-rol-${i}`).value;
+      guardarLocal();
       mostrarCRUD();
     }
 
-    mostrarPersonajes(); // Mostrar al cargar
+    function eliminar(i) {
+      if (confirm("¿Estás seguro de eliminar este personaje?")) {
+        personajes.splice(i, 1);
+        guardarLocal();
+        mostrarCRUD();
+      }
+    }
+
+    mostrarPersonajes();
   </script>
 </body>
 </html>
