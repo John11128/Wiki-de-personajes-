@@ -2,6 +2,12 @@
 <html lang="es">
 <head <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 >
+  <script>
+  const SUPABASE_URL = 'https://yfusfwzvnwnjdqbsmboh.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmdXNmd3p2bnduamRxYnNtYm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0MTQwOTIsImV4cCI6MjA2MTk5MDA5Mn0.4OuM1Z3-6MKdJsJPTSNPpBO2FNobmIFF44J7mQuCNms';
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Wiki de Personajes</title>
