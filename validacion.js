@@ -1,7 +1,13 @@
 // Configuración de Supabase (asegúrate de tener estas variables definidas)
 const supabaseUrl = 'https://yfusfwzvnwnjdqbsmboh.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmdXNmd3p2bnduamRxYnNtYm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0MTQwOTIsImV4cCI6MjA2MTk5MDA5Mn0.4OuM1Z3-6MKdJsJPTSNPpBO2FNobmIFF44J7mQuCNms';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+// Aquí se usa la función `createClient` correctamente
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Exponiendo las funciones al global (por si las llamas en el HTML)
+window.agregarPersonaje = agregarPersonaje;
+window.mostrarPersonajes = mostrarPersonajes;
 
 // Función principal para agregar personajes
 async function agregarPersonaje() {
