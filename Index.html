@@ -14,9 +14,21 @@
 <body>
   <h1>Wiki de Personajes</h1>
   <nav>
-    <button onclick="mostrarSeccion('ver')">Ver personajes</button>
-    <button onclick="mostrarSeccion('agregar')">Agregar personaje</button>
-    <button onclick="mostrarSeccion('editar')">Editar/Borrar personajes</button>
+    <!-- Botón que cambia a la sección "agregar" -->
+<button onclick="mostrarSeccion('agregar')">Agregar Personaje</button>
+
+<!-- Botón que cambia a la sección "verPersonajes" -->
+<button onclick="mostrarSeccion('verPersonajes')">Ver Personajes</button>
+
+<!-- Secciones de la página -->
+<div id="agregar" class="seccion" style="display: none;">
+  <!-- Formulario para agregar personaje -->
+</div>
+
+<div id="verPersonajes" class="seccion" style="display: none;">
+  <!-- Lista de personajes -->
+</div>
+
   </nav>
 
   <section id="ver">
