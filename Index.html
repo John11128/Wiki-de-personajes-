@@ -93,7 +93,7 @@
     <h2>Agregar nuevo personaje</h2>
     <input type="text" id="nombre" placeholder="Nombre" required />
     <textarea id="descripcion" placeholder="Descripción" required></textarea>
-    <input type="file" id="imagen" accept="image/*" required />
+    <input type="url" id="imagen" placeholder="URL de la imagen" required />
 
     <label for="faccion">Facción:</label>
     <select id="faccion" required>
@@ -141,42 +141,19 @@
     async function agregarPersonaje() {
       const nombre = document.getElementById('nombre').value.trim();
       const descripcion = document.getElementById('descripcion').value.trim();
-      const imagenInput = document.getElementById('imagen');
+      const imagen = document.getElementById('imagen').value.trim();
       const faccion = document.getElementById('faccion').value;
       const rol = document.getElementById('rol').value;
 
-      if (!nombre || !descripcion || !imagenInput.files.length) {
-        alert("Por favor, completa todos los campos y selecciona una imagen.");
+      if (!nombre || !descripcion || !imagen) {
+        alert("Por favor, completa todos los campos.");
         return;
       }
-
-      const imagenFile = imagenInput.files[0];
-      const fileExt = imagenFile.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      // Subir la imagen al bucket 'personajes'
-      const { error: uploadError } = await supabase.storage
-        .from('personajes')
-        .upload(filePath, imagenFile);
-
-      if (uploadError) {
-        console.error('Error al subir la imagen:', uploadError);
-        alert("Error al subir la imagen.");
-        return;
-      }
-
-      // Obtener la URL pública de la imagen
-      const { data: publicUrlData } = supabase.storage
-        .from('personajes')
-        .getPublicUrl(filePath);
-
-      const imagen_url = publicUrlData.publicUrl;
 
       // Insertar el personaje en la base de datos
       const { error: insertError } = await supabase
         .from('personajes')
-        .insert([{ nombre, descripcion, imagen_url, faccion, rol }]);
+        .insert([{ nombre, descripcion, imagen_url: imagen, faccion, rol }]);
 
       if (insertError) {
         console.error('Error al insertar el personaje:', insertError);
@@ -236,100 +213,66 @@
           <div class="personaje">
             <input type="text" value="${p.nombre}" id="edit-nombre-${p.id}">
             <textarea id="edit-desc-${p.id}">${p.descripcion}</textarea>
-            <img src="${p.imagen_url}" alt="Imagen de ${p.nombre}" style="max-width: 100px;">
-            <label for="edit-faccion-${p.id}">Facción:</label>
+            <input type="url" value="${p.imagen_url}" id="edit-imagen-${p.id}">
             <select id="edit-faccion-${p.id}">
-              <option value="Fujimafia" ${p.faccion === 'Fujimafia' ? 'selected' : ''}>Fujimafia</option>
-              <option value="Ruinas de los Caballeros" ${p.faccion === 'Ruinas de los Caballeros' ? 'selected' : ''}>Ruinas de los Caballeros</option>
-              <option value="Dominios de Saurus" ${p.faccion === 'Dominios de Saurus' ? 'selected' : ''}>Dominios de Saurus</option>
-              <option value="Segunda República Lagartos" ${p.faccion === 'Segunda República Lagartos' ? 'selected' : ''}>Segunda República Lagartos</option>
-              <option value="Isla [REDACTED]" ${p.faccion === 'Isla [REDACTED]' ? 'selected' : ''}>Isla [REDACTED]</option>
-              <option value="Tribus Tribales" ${p.faccion === 'Tribus Tribales' ? 'selected' : ''}>Tribus Tribales</option>
-              <option value="TorreDe" ${p.faccion === 'TorreDe' ? 'selected' : ''}>TorreDe</option>
-              <option value="Isla Tuki" ${p.faccion === 'Isla Tuki' ? 'selected' : ''}>Isla Tuki</option>
-              <option value="Federación de Dureza" ${p.faccion === 'Federación de Dureza' ? 'selected' : ''}>Federación de Dureza</option>
+              <option value="Fujimafia">Fujimafia</option>
+              <option value="Ruinas de los Caballeros">Ruinas de los Caballeros</option>
+              <option value="Dominios de Saurus">Dominios de Saurus</option>
+              <option value="Segunda República Lagartos">Segunda República Lagartos</option>
+              <option value="Isla [REDACTED]">Isla [REDACTED]</option>
+              <option value="Tribus Tribales">Tribus Tribales</option>
+              <option value="TorreDe">TorreDe</option>
+              <option value="Isla Tuki">Isla Tuki</option>
+              <option value="Federación de Dureza">Federación de Dureza</option>
             </select>
-            
-            <label for="edit-rol-${p.id}">Rol:</label>
             <select id="edit-rol-${p.id}">
-              <option value="Héroe" ${p.rol === 'Héroe' ? 'selected' : ''}>Héroe</option>
-              <option value="Villano" ${p.rol === 'Villano' ? 'selected' : ''}>Villano</option>
-              <option value="Ente del Caos" ${p.rol === 'Ente del Caos' ? 'selected' : ''}>Ente del Caos</option>
-              <option value="Neutral" ${p.rol === 'Neutral' ? 'selected' : ''}>Neutral</option>
+              <option value="Héroe">Héroe</option>
+              <option value="Villano">Villano</option>
+              <option value="Ente del Caos">Ente del Caos</option>
+              <option value="Neutral">Neutral</option>
             </select>
-            
-            <input type="file" id="edit-imagen-${p.id}" accept="image/*">
-            
-            <div class="crud-buttons">
-              <button onclick="guardarCambios(${p.id})">Guardar Cambios</button>
-              <button onclick="eliminarPersonaje(${p.id})">Eliminar</button>
-            </div>
+            <button onclick="editarPersonaje(${p.id})">Guardar cambios</button>
+            <button onclick="borrarPersonaje(${p.id})">Borrar</button>
           </div>
         `;
       });
     }
 
-    async function guardarCambios(id) {
+    async function editarPersonaje(id) {
       const nombre = document.getElementById(`edit-nombre-${id}`).value;
       const descripcion = document.getElementById(`edit-desc-${id}`).value;
+      const imagen_url = document.getElementById(`edit-imagen-${id}`).value;
       const faccion = document.getElementById(`edit-faccion-${id}`).value;
       const rol = document.getElementById(`edit-rol-${id}`).value;
-      const imagenInput = document.getElementById(`edit-imagen-${id}`);
-      
-      // Verificar si se seleccionó una nueva imagen
-      let imagen_url = '';
-      if (imagenInput.files.length) {
-        const imagenFile = imagenInput.files[0];
-        const fileExt = imagenFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = fileName;
 
-        const { error: uploadError } = await supabase.storage
-          .from('personajes')
-          .upload(filePath, imagenFile);
-
-        if (uploadError) {
-          console.error('Error al subir la imagen:', uploadError);
-          alert("Error al subir la imagen.");
-          return;
-        }
-
-        // Obtener la URL pública de la nueva imagen
-        const { data: publicUrlData } = supabase.storage
-          .from('personajes')
-          .getPublicUrl(filePath);
-          
-        imagen_url = publicUrlData.publicUrl;
-      }
-
-      const { error: updateError } = await supabase
+      const { error } = await supabase
         .from('personajes')
-        .update({ nombre, descripcion, faccion, rol, imagen_url })
+        .update({ nombre, descripcion, imagen_url, faccion, rol })
         .eq('id', id);
 
-      if (updateError) {
-        console.error('Error al actualizar el personaje:', updateError);
-        alert("Error al guardar los cambios.");
+      if (error) {
+        console.error('Error al editar el personaje:', error);
+        alert('Error al guardar los cambios.');
         return;
       }
 
-      alert("Cambios guardados exitosamente.");
+      alert('Personaje actualizado exitosamente.');
       mostrarCRUD();
     }
 
-    async function eliminarPersonaje(id) {
+    async function borrarPersonaje(id) {
       const { error } = await supabase
         .from('personajes')
         .delete()
         .eq('id', id);
 
       if (error) {
-        console.error('Error al eliminar el personaje:', error);
-        alert("Error al eliminar el personaje.");
+        console.error('Error al borrar el personaje:', error);
+        alert('Error al eliminar el personaje.');
         return;
       }
 
-      alert("Personaje eliminado exitosamente.");
+      alert('Personaje eliminado exitosamente.');
       mostrarCRUD();
     }
   </script>
