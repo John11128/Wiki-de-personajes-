@@ -1,53 +1,14 @@
 <!DOCTYPE html>
-
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Wiki de Personajes</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f0f0;
-      margin: 0;
-      padding: 1em;
-    }
-    nav button {
-      margin: 5px;
-      padding: 10px 15px;
-      font-size: 14px;
-    }
-    section {
-      display: none;
-      margin-top: 1em;
-    }
-    section.active {
-      display: block;
-    }
-    .personaje {
-      background: white;
-      border: 1px solid #ccc;
-      padding: 1em;
-      margin-bottom: 1em;
-      border-radius: 8px;
-    }
-    .personaje img {
-      max-width: 150px;
-      display: block;
-      margin-top: 5px;
-    }
-    input, textarea, select {
-      display: block;
-      margin: 5px 0;
-      width: 100%;
-      max-width: 400px;
-      padding: 6px;
-    }
-    .crud-buttons {
-      margin-top: 10px;
-    }
-    .crud-buttons button {
-      margin-right: 10px;
-    }
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f2f2f2; }
+    section { display: none; margin-top: 20px; }
+    .personaje { border: 1px solid #ccc; background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+    .personaje img { max-width: 100px; display: block; }
+    nav button { margin-right: 10px; padding: 10px 20px; }
   </style>
 </head>
 <body>
@@ -66,9 +27,9 @@
   <section id="agregar">
     <h2>Agregar nuevo personaje</h2>
     <form onsubmit="agregarPersonaje(event)">
-      <input type="text" id="nombre" placeholder="Nombre" required>
-      <textarea id="descripcion" placeholder="Descripción" required></textarea>
-      <input type="url" id="imagen_url" placeholder="URL de imagen" required>
+      <input type="text" id="nombre" placeholder="Nombre" required><br><br>
+      <textarea id="descripcion" placeholder="Descripción" required></textarea><br><br>
+      <input type="url" id="imagen_url" placeholder="URL de imagen" required><br><br>
 
       <label>Facción:</label>
       <select id="faccion" required>
@@ -78,7 +39,7 @@
         <option value="Horda Ardiente">Horda Ardiente</option>
         <option value="Academia de Luz">Academia de Luz</option>
         <option value="Clanes del Norte">Clanes del Norte</option>
-      </select>
+      </select><br><br>
 
       <label>Rol:</label>
       <select id="rol" required>
@@ -86,7 +47,7 @@
         <option value="Villano">Villano</option>
         <option value="Ente del Caos">Ente del Caos</option>
         <option value="Neutral">Neutral</option>
-      </select>
+      </select><br><br>
 
       <button type="submit">Agregar</button>
     </form>
@@ -94,185 +55,90 @@
 
   <section id="editar">
     <h2>Editar/Borrar personajes</h2>
-    <div id="listaCRUD"></div>
+    <div id="crud"></div>
   </section>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
   <script>
-    const supabase = supabase.createClient('https://yfusfwzvnwnjdqbsmboh.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmdXNmd3p2bnduamRxYnNtYm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0MTQwOTIsImV4cCI6MjA2MTk5MDA5Mn0.4OuM1Z3-6MKdJsJPTSNPpBO2FNobmIFF44J7mQuCNms');
+    const supabaseUrl = 'https://tu-url.supabase.co'; // Reemplaza con tu URL
+    const supabaseKey = 'tu-clave-api'; // Reemplaza con tu clave pública
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
     function mostrarSeccion(id) {
-      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      if (id === 'ver') mostrarPersonajes();
+      document.querySelectorAll('section').forEach(sec => sec.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+      if (id === 'ver') cargarPersonajes();
       if (id === 'editar') mostrarCRUD();
     }
 
-    async function mostrarPersonajes() {
-      const { data: personajes, error } = await supabase
-        .from('personajes')
-        .select('*');
-
-      const contenedor = document.getElementById('lista');
-      contenedor.innerHTML = '';
-
+    async function cargarPersonajes() {
+      const { data: personajes, error } = await supabase.from('personajes').select('*');
+      const lista = document.getElementById('lista');
+      lista.innerHTML = '';
       personajes.forEach(p => {
-        contenedor.innerHTML += `
+        lista.innerHTML += `
           <div class="personaje">
             <h3>${p.nombre}</h3>
             <p>${p.descripcion}</p>
-            <img src="${p.imagen_url}" alt="${p.nombre}">
             <p><strong>Facción:</strong> ${p.faccion}</p>
             <p><strong>Rol:</strong> ${p.rol}</p>
+            <img src="${p.imagen_url}" alt="Imagen de ${p.nombre}">
           </div>
         `;
       });
     }
 
-    async function agregarPersonaje(e) {
-      e.preventDefault();
+    async function agregarPersonaje(event) {
+      event.preventDefault();
       const nombre = document.getElementById('nombre').value;
       const descripcion = document.getElementById('descripcion').value;
       const imagen_url = document.getElementById('imagen_url').value;
       const faccion = document.getElementById('faccion').value;
       const rol = document.getElementById('rol').value;
 
-      const { error } = await supabase
-        .from('personajes')
-        .insert([{ nombre, descripcion, imagen_url, faccion, rol }]);
-
-      if (error) {
-        alert('Error al agregar personaje.');
-        console.error(error);
-      } else {
-        alert('Personaje agregado.');
-        e.target.reset();
+      const { error } = await supabase.from('personajes').insert([{ nombre, descripcion, imagen_url, faccion, rol }]);
+      if (!error) {
+        alert('Personaje agregado con éxito');
+        event.target.reset();
         mostrarSeccion('ver');
+      } else {
+        alert('Error al agregar personaje');
+        console.error(error);
       }
     }
 
     async function mostrarCRUD() {
-      const { data: personajes, error } = await supabase
-        .from('personajes')
-        .select('*');
-
-      const contenedor = document.getElementById('listaCRUD');
+      const { data: personajes } = await supabase.from('personajes').select('*');
+      const contenedor = document.getElementById('crud');
       contenedor.innerHTML = '';
-
       personajes.forEach(p => {
         contenedor.innerHTML += `
           <div class="personaje">
-            <input type="text" id="edit-nombre-${p.id}" value="${p.nombre}">
-            <textarea id="edit-desc-${p.id}">${p.descripcion}</textarea>
+            <input value="${p.nombre}" onchange="actualizar(${p.id}, 'nombre', this.value)">
+            <textarea onchange="actualizar(${p.id}, 'descripcion', this.value)">${p.descripcion}</textarea>
+            <input value="${p.imagen_url}" onchange="actualizar(${p.id}, 'imagen_url', this.value)">
+            <input value="${p.faccion}" onchange="actualizar(${p.id}, 'faccion', this.value)">
+            <input value="${p.rol}" onchange="actualizar(${p.id}, 'rol', this.value)">
+            <button onclick="eliminar(${p.id})">Eliminar</button>
+          </div>
+        `;
+      });
+    }
 
-```
-        <input type="url" id="edit-imagen-${p.id}" value="${p.imagen_url}">
+    async function actualizar(id, campo, valor) {
+      const { error } = await supabase.from('personajes').update({ [campo]: valor }).eq('id', id);
+      if (error) console.error('Error al actualizar', error);
+    }
 
-        <label>Facción:</label>
-        <select id="edit-faccion-${p.id}">
-          <option value="Fujimafia" ${p.faccion === "Fujimafia" ? "selected" : ""}>Fujimafia</option>
-          <option value="Ruinas de los Caballeros" ${p.faccion === "Ruinas de los Caballeros" ? "selected" : ""}>Ruinas de los Caballeros</option>
-          <option value="Coalición Oculta" ${p.faccion === "Coalición Oculta" ? "selected" : ""}>Coalición Oculta</option>
-          <option value="Horda Ardiente" ${p.faccion === "Horda Ardiente" ? "selected" : ""}>Horda Ardiente</option>
-          <option value="Academia de Luz" ${p.faccion === "Academia de Luz" ? "selected" : ""}>Academia de Luz</option>
-          <option value="Clanes del Norte" ${p.faccion === "Clanes del Norte" ? "selected" : ""}>Clanes del Norte</option>
-        </select>
-
-        <label>Rol:</label>
-        <select id="edit-rol-${p.id}">
-          <option value="Héroe" ${p.rol === "Héroe" ? "selected" : ""}>Héroe</option>
-          <option value="Villano" ${p.rol === "Villano" ? "selected" : ""}>Villano</option>
-          <option value="Ente del Caos" ${p.rol === "Ente del Caos" ? "selected" : ""}>Ente del Caos</option>
-          <option value="Neutral" ${p.rol === "Neutral" ? "selected" : ""}>Neutral</option>
-        </select>
-
-        <div class="crud-buttons">
-          <button onclick="actualizarPersonaje(${p.id})">Actualizar</button>
-          <button onclick="eliminarPersonaje(${p.id})">Eliminar</button>
-        </div>
-      </div>
-    `;
-  });
-}
-
-async function actualizarPersonaje(id) {
-  const nombre = document.getElementById(`edit-nombre-${id}`).value;
-  const descripcion = document.getElementById(`edit-desc-${id}`).value;
-  const imagen_url = document.getElementById(`edit-imagen-${id}`).value;
-  const faccion = document.getElementById(`edit-faccion-${id}`).value;
-  const rol = document.getElementById(`edit-rol-${id}`).value;
-
-  const { error } = await supabase
-    .from('personajes')
-    .update({ nombre, descripcion, imagen_url, faccion, rol })
-    .eq('id', id);
-
-  if (error) {
-    alert("Error al actualizar personaje.");
-    console.error(error);
-  } else {
-    alert("Personaje actualizado.");
-    mostrarCRUD();
-  }
-}
-
-async function eliminarPersonaje(id) {
-  if (!confirm("¿Seguro que querés eliminar este personaje?")) return;
-
-  const { error } = await supabase
-    .from('personajes')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    alert("Error al eliminar personaje.");
-    console.error(error);
-  } else {
-    alert("Personaje eliminado.");
-    mostrarCRUD();
-  }
-}
-    async function actualizarPersonaje(id) {
-      const nombre = document.getElementById(`edit-nombre-${id}`).value;
-      const descripcion = document.getElementById(`edit-desc-${id}`).value;
-      const imagen_url = document.getElementById(`edit-imagen-${id}`).value;
-      const faccion = document.getElementById(`edit-faccion-${id}`).value;
-      const rol = document.getElementById(`edit-rol-${id}`).value;
-
-      const { error } = await supabase
-        .from('personajes')
-        .update({ nombre, descripcion, imagen_url, faccion, rol })
-        .eq('id', id);
-
-      if (error) {
-        alert('Error al actualizar el personaje.');
-        console.error(error);
-      } else {
-        alert('Personaje actualizado.');
-        mostrarCRUD();
+    async function eliminar(id) {
+      if (confirm('¿Eliminar este personaje?')) {
+        const { error } = await supabase.from('personajes').delete().eq('id', id);
+        if (!error) mostrarCRUD();
+        else console.error('Error al eliminar', error);
       }
     }
 
-    async function eliminarPersonaje(id) {
-      if (!confirm('¿Estás seguro de que quieres eliminar este personaje?')) return;
-
-      const { error } = await supabase
-        .from('personajes')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        alert('Error al eliminar el personaje.');
-        console.error(error);
-      } else {
-        alert('Personaje eliminado.');
-        mostrarCRUD();
-      }
-    }
-
-    // Mostrar sección por defecto
     mostrarSeccion('ver');
   </script>
 </body>
-</html>                      
+</html>
